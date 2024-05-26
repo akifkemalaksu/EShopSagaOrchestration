@@ -1,9 +1,15 @@
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Order.API.Contexts;
+using Shared.Extensions;
 using Shared.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -24,7 +30,17 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+builder.Services.ConfigureCQRSServices();
+builder.Services.ConfigureServices();
+
 var app = builder.Build();
+
+app.MapControllers();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -32,8 +48,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.MapGet("/", () => "Hello world!");
 
 app.UseHttpsRedirection();
 
