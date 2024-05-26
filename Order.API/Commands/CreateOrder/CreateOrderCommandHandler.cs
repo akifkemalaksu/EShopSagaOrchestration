@@ -5,6 +5,7 @@ using Shared;
 using Shared.Events;
 using Shared.Interfaces.Commands;
 using Shared.Interfaces.Services;
+using Shared.Messages;
 using Shared.Settings;
 
 namespace Order.API.Commands.CreateOrder
@@ -36,6 +37,7 @@ namespace Order.API.Commands.CreateOrder
                 OrderItems = order.Items.Adapt<List<OrderItemMessage>>(),
                 Payment = command.Payment.Adapt<PaymentMessage>()
             };
+            newOrderCreatedEvent.Payment.TotalPrice = newOrderCreatedEvent.OrderItems.Sum(x => x.Price * x.Count);
 
             await _busService.Send(RabbitMqQueues.OrderSaga, newOrderCreatedEvent);
 

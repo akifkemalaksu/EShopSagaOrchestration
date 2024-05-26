@@ -1,5 +1,9 @@
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Shared.Extensions;
 using Shared.Settings;
+using Stock.API.Consumers;
+using Stock.API.Contexts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +18,8 @@ builder.Services.AddSwaggerGen();
 var rabbitMqSettings = builder.Configuration.GetSection(nameof(RabbitMqSettings)).Get<RabbitMqSettings>();
 builder.Services.AddMassTransit(x =>
 {
+    x.AddConsumer<OrderCreatedEventConsumer>();
+
     x.UsingRabbitMq((context, configure) =>
     {
         configure.Host(rabbitMqSettings.Host, hostConfigure =>
@@ -24,8 +30,21 @@ builder.Services.AddMassTransit(x =>
         });
 
         configure.ConfigureEndpoints(context);
+
+        configure.ReceiveEndpoint(RabbitMqQueues.StockOrderCreatedEventQueue, configureEndpoint =>
+        {
+            configureEndpoint.ConfigureConsumer<OrderCreatedEventConsumer>(context);
+        });
     });
 });
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+builder.Services.ConfigureServices();
+builder.Services.ConfigureCQRSServices();
 
 var app = builder.Build();
 

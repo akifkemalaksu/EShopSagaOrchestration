@@ -1,4 +1,6 @@
-﻿namespace Shared.Interfaces.Events
+﻿using Shared.Messages;
+
+namespace Shared.Interfaces.Events
 {
     public interface IOrderCreatedRequestEvent
     {

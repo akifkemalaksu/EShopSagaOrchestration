@@ -1,6 +1,7 @@
 ﻿using Mapster;
 using MassTransit;
 using SagaStateMachineWorkerService.Models;
+using Shared.Events;
 using Shared.Interfaces.Events;
 
 namespace SagaStateMachineWorkerService.Machines
@@ -30,6 +31,14 @@ namespace SagaStateMachineWorkerService.Machines
                     context.Data.Adapt(context.Instance);
                 })
                 .Then(context => Console.WriteLine($"{nameof(OrderCreatedRequestEvent)} before: {context.Instance}"))
+                .PublishAsync(context =>
+                    context.Init<IOrderCreatedEvent>(
+                        new OrderCreatedEvent(context.Instance.CorrelationId)
+                        {
+                            OrderItems = context.Data.OrderItems
+                        }
+                    )
+                )
                 .TransitionTo(OrderCreated)
                 .Then(context => Console.WriteLine($"{nameof(OrderCreatedRequestEvent)} after: {context.Instance}"))
                 );

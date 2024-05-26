@@ -48,6 +48,17 @@ namespace Shared.Extensions
                 .WithScopedLifetime();
             });
 
+            services.Scan(selector =>
+            {
+                selector.FromEntryAssembly()
+                .AddClasses(filter =>
+                {
+                    filter.AssignableTo(typeof(ICommandHandler<>));
+                })
+                .AsImplementedInterfaces()
+                .WithScopedLifetime();
+            });
+
             return services;
         }
     }

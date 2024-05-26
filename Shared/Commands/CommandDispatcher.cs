@@ -17,5 +17,11 @@ namespace Shared.Commands
             var handler = _serviceProvider.GetRequiredService<ICommandHandler<TCommand, TCommandResult>>();
             return handler.Handle(command, cancellationToken);
         }
+
+        public Task Dispatch<TCommand>(TCommand command, CancellationToken cancellationToken = default)
+        {
+            var handler = _serviceProvider.GetRequiredService<ICommandHandler<TCommand>>();
+            return handler.Handle(command, cancellationToken);
+        }
     }
 }
