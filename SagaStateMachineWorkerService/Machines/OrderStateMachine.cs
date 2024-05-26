@@ -3,6 +3,8 @@ using MassTransit;
 using SagaStateMachineWorkerService.Models;
 using Shared.Events;
 using Shared.Interfaces.Events;
+using Shared.Messages;
+using Shared.Settings;
 
 namespace SagaStateMachineWorkerService.Machines
 {
@@ -10,7 +12,11 @@ namespace SagaStateMachineWorkerService.Machines
     {
         public Event<IOrderCreatedRequestEvent> OrderCreatedRequestEvent { get; set; }
 
+        public Event<IStockReservedEvent> StockReservedEvent { get; set; }
+
         public State OrderCreated { get; private set; }
+
+        public State StockReserved { get; private set; }
 
         public OrderStateMachine()
         {
@@ -28,20 +34,36 @@ namespace SagaStateMachineWorkerService.Machines
                 When(OrderCreatedRequestEvent)
                 .Then(context =>
                 {
-                    context.Data.Adapt(context.Instance);
+                    context.Message.Adapt(context.Saga);
                 })
                 .Then(context => Console.WriteLine($"{nameof(OrderCreatedRequestEvent)} before: {context.Instance}"))
                 .PublishAsync(context =>
                     context.Init<IOrderCreatedEvent>(
-                        new OrderCreatedEvent(context.Instance.CorrelationId)
+                        new OrderCreatedEvent(context.Saga.CorrelationId)
                         {
-                            OrderItems = context.Data.OrderItems
+                            OrderItems = context.Message.OrderItems
                         }
                     )
                 )
                 .TransitionTo(OrderCreated)
                 .Then(context => Console.WriteLine($"{nameof(OrderCreatedRequestEvent)} after: {context.Instance}"))
-                );
+            );
+
+            During(OrderCreated,
+                When(StockReservedEvent)
+                .TransitionTo(StockReserved)
+                .SendAsync(
+                    new Uri($"queue:{RabbitMqQueues.PaymentStockReservedRequestQueue}"),
+                    context => context.Init<IStockReservedRequestPayment>(new StockReservedRequestPayment(context.Saga.CorrelationId)
+                    {
+                        OrderItems = context.Message.OrderItems,
+                        Payment = context.Saga.Payment.Adapt<PaymentMessage>()
+                    })
+                )
+                .Then(context => Console.WriteLine($"{nameof(StockReservedEvent)} after: {context.Saga}"))
+            );
+
+            During(StockReserved);
         }
     }
 }
