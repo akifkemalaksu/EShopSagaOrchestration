@@ -1,6 +1,4 @@
-﻿using System.Reflection.Metadata.Ecma335;
-
-namespace Shared.Settings
+﻿namespace Shared.Constants
 {
     public class RabbitMqQueues
     {

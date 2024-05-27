@@ -4,6 +4,7 @@ using SagaStateMachineWorkerService;
 using SagaStateMachineWorkerService.Contexts;
 using SagaStateMachineWorkerService.Machines;
 using SagaStateMachineWorkerService.Models;
+using Shared.Constants;
 using Shared.Settings;
 using System.Reflection;
 

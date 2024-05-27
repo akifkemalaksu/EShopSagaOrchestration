@@ -15,5 +15,7 @@ namespace Shared.Events
         public List<OrderItemMessage> OrderItems { get; set; }
 
         public Guid CorrelationId { get; }
+
+        public string BuyerId { get; set; }
     }
 }

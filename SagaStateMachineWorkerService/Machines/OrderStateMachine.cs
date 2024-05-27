@@ -1,10 +1,10 @@
 ﻿using Mapster;
 using MassTransit;
 using SagaStateMachineWorkerService.Models;
+using Shared.Constants;
 using Shared.Events;
 using Shared.Interfaces.Events;
 using Shared.Messages;
-using Shared.Settings;
 
 namespace SagaStateMachineWorkerService.Machines
 {
@@ -14,9 +14,13 @@ namespace SagaStateMachineWorkerService.Machines
 
         public Event<IStockReservedEvent> StockReservedEvent { get; set; }
 
+        public Event<IPaymentCompletedEvent> PaymentCompletedEvent { get; set; }
+
         public State OrderCreated { get; private set; }
 
         public State StockReserved { get; private set; }
+
+        public State PaymentCompleted { get; private set; }
 
         public OrderStateMachine()
         {
@@ -24,11 +28,16 @@ namespace SagaStateMachineWorkerService.Machines
 
             Event(
                 () => OrderCreatedRequestEvent,
-                property =>
-                    property
-                        .CorrelateBy<int>(x => x.OrderId, z => z.Message.OrderId)
-                        .SelectId(context => Guid.NewGuid())
-                );
+                x => x.CorrelateBy<int>(x => x.OrderId, z => z.Message.OrderId)
+                        .SelectId(context => Guid.NewGuid()));
+
+            Event(
+                () => StockReservedEvent,
+                x => x.CorrelateById(y => y.Message.CorrelationId));
+
+            Event(
+                () => PaymentCompletedEvent,
+                x => x.CorrelateById(y => y.Message.CorrelationId));
 
             Initially(
                 When(OrderCreatedRequestEvent)
@@ -36,7 +45,7 @@ namespace SagaStateMachineWorkerService.Machines
                 {
                     context.Message.Adapt(context.Saga);
                 })
-                .Then(context => Console.WriteLine($"{nameof(OrderCreatedRequestEvent)} before: {context.Instance}"))
+                .Then(context => Console.WriteLine($"{nameof(OrderCreatedRequestEvent)} before: {context.Saga}"))
                 .PublishAsync(context =>
                     context.Init<IOrderCreatedEvent>(
                         new OrderCreatedEvent(context.Saga.CorrelationId)
@@ -46,7 +55,7 @@ namespace SagaStateMachineWorkerService.Machines
                     )
                 )
                 .TransitionTo(OrderCreated)
-                .Then(context => Console.WriteLine($"{nameof(OrderCreatedRequestEvent)} after: {context.Instance}"))
+                .Then(context => Console.WriteLine($"{nameof(OrderCreatedRequestEvent)} after: {context.Saga}"))
             );
 
             During(OrderCreated,
@@ -54,16 +63,32 @@ namespace SagaStateMachineWorkerService.Machines
                 .TransitionTo(StockReserved)
                 .SendAsync(
                     new Uri($"queue:{RabbitMqQueues.PaymentStockReservedRequestQueue}"),
-                    context => context.Init<IStockReservedRequestPayment>(new StockReservedRequestPayment(context.Saga.CorrelationId)
-                    {
-                        OrderItems = context.Message.OrderItems,
-                        Payment = context.Saga.Payment.Adapt<PaymentMessage>()
-                    })
+                    context =>
+                    context.Init<IStockReservedRequestPayment>(
+                        new StockReservedRequestPayment(context.Saga.CorrelationId)
+                        {
+                            OrderItems = context.Message.OrderItems,
+                            Payment = context.Saga.Payment.Adapt<PaymentMessage>(),
+                            BuyerId = context.Saga.BuyerId
+                        }
+                    )
                 )
                 .Then(context => Console.WriteLine($"{nameof(StockReservedEvent)} after: {context.Saga}"))
             );
 
-            During(StockReserved);
+            During(StockReserved,
+                When(PaymentCompletedEvent)
+                .TransitionTo(PaymentCompleted)
+                .PublishAsync(context =>
+                    context.Init<IOrderRequestCompletedEvent>(
+                        new OrderRequestCompletedEvent
+                        {
+                            OrderId = context.Saga.OrderId
+                        }
+                    )
+                )
+                .Then(context => Console.WriteLine($"{nameof(PaymentCompletedEvent)} after: {context.Saga}"))
+            );
         }
     }
 }

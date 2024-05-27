@@ -46,7 +46,7 @@ namespace Stock.API.Commands
 
                 var stockReservedEvent = new StockReservedEvent(command.CorrelationId)
                 {
-                    OrderItems = command.OrderItems,
+                    OrderItems = command.OrderItems
                 };
 
                 await _busService.Publish(stockReservedEvent);

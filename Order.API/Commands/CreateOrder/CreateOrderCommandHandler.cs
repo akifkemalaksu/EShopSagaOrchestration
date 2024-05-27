@@ -2,11 +2,11 @@
 using Order.API.Constants;
 using Order.API.Contexts;
 using Shared;
+using Shared.Constants;
 using Shared.Events;
 using Shared.Interfaces.Commands;
 using Shared.Interfaces.Services;
 using Shared.Messages;
-using Shared.Settings;
 
 namespace Order.API.Commands.CreateOrder
 {

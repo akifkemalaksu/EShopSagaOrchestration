@@ -1,5 +1,6 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Shared.Constants;
 using Shared.Extensions;
 using Shared.Settings;
 using Stock.API.Consumers;

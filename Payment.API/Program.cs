@@ -1,5 +1,8 @@
 using MassTransit;
+using Payment.API.Consumers;
+using Shared.Constants;
 using Shared.Settings;
+using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,18 +17,27 @@ builder.Services.AddSwaggerGen();
 var rabbitMqSettings = builder.Configuration.GetSection(nameof(RabbitMqSettings)).Get<RabbitMqSettings>();
 builder.Services.AddMassTransit(x =>
 {
+    x.AddConsumer<StockReservedRequestPaymentConsumer>();
+
     x.UsingRabbitMq((context, configure) =>
     {
         configure.Host(rabbitMqSettings.Host, hostConfigure =>
         {
             hostConfigure.Username(rabbitMqSettings.Username);
             hostConfigure.Password(rabbitMqSettings.Password);
-
         });
 
         configure.ConfigureEndpoints(context);
+
+        configure.ReceiveEndpoint(RabbitMqQueues.PaymentStockReservedRequestQueue, configureEndpoint =>
+        {
+            configureEndpoint.ConfigureConsumer<StockReservedRequestPaymentConsumer>(context);
+        });
     });
 });
+
+builder.Services.ConfigureServices();
+builder.Services.ConfigureCQRSServices();
 
 var app = builder.Build();
 

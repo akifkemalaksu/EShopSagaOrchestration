@@ -1,6 +1,8 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Order.API.Consumers;
 using Order.API.Contexts;
+using Shared.Constants;
 using Shared.Extensions;
 using Shared.Settings;
 
@@ -17,6 +19,8 @@ builder.Services.AddSwaggerGen();
 var rabbitMqSettings = builder.Configuration.GetSection(nameof(RabbitMqSettings)).Get<RabbitMqSettings>();
 builder.Services.AddMassTransit(x =>
 {
+    x.AddConsumer<OrderRequestCompletedEventConsumer>();
+
     x.UsingRabbitMq((context, configure) =>
     {
         configure.Host(rabbitMqSettings.Host, hostConfigure =>
@@ -27,6 +31,11 @@ builder.Services.AddMassTransit(x =>
         });
 
         configure.ConfigureEndpoints(context);
+
+        configure.ReceiveEndpoint(RabbitMqQueues.OrderRequestCompletedEventQueue, configureEndpoint =>
+        {
+            configureEndpoint.ConfigureConsumer<OrderRequestCompletedEventConsumer>(context);
+        });
     });
 });
 
