@@ -46,8 +46,9 @@ namespace SagaStateMachineWorkerService.Machines
                     context.Message.Adapt(context.Saga);
                 })
                 .Then(context => Console.WriteLine($"{nameof(OrderCreatedRequestEvent)} before: {context.Saga}"))
-                .PublishAsync(context =>
-                    context.Init<IOrderCreatedEvent>(
+                .PublishAsync(
+                    async context =>
+                    await context.Init<IOrderCreatedEvent>(
                         new OrderCreatedEvent(context.Saga.CorrelationId)
                         {
                             OrderItems = context.Message.OrderItems
@@ -61,9 +62,10 @@ namespace SagaStateMachineWorkerService.Machines
             During(OrderCreated,
                 When(StockReservedEvent)
                 .TransitionTo(StockReserved)
-                .PublishAsync(
-                    context =>
-                    context.Init<IStockReservedRequestPayment>(
+                .SendAsync(
+                    new Uri($"queue:{RabbitMqQueues.PaymentStockReservedRequestQueue}"),
+                    async context =>
+                    await context.Init<IStockReservedRequestPayment>(
                         new StockReservedRequestPayment(context.Saga.CorrelationId)
                         {
                             OrderItems = context.Message.OrderItems,
@@ -78,8 +80,9 @@ namespace SagaStateMachineWorkerService.Machines
             During(StockReserved,
                 When(PaymentCompletedEvent)
                 .TransitionTo(PaymentCompleted)
-                .PublishAsync(context =>
-                    context.Init<IOrderRequestCompletedEvent>(
+                .PublishAsync(
+                    async context =>
+                    await context.Init<IOrderRequestCompletedEvent>(
                         new OrderRequestCompletedEvent
                         {
                             OrderId = context.Saga.OrderId
