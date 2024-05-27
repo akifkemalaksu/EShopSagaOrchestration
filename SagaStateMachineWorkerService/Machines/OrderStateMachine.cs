@@ -61,8 +61,7 @@ namespace SagaStateMachineWorkerService.Machines
             During(OrderCreated,
                 When(StockReservedEvent)
                 .TransitionTo(StockReserved)
-                .SendAsync(
-                    new Uri($"queue:{RabbitMqQueues.PaymentStockReservedRequestQueue}"),
+                .PublishAsync(
                     context =>
                     context.Init<IStockReservedRequestPayment>(
                         new StockReservedRequestPayment(context.Saga.CorrelationId)
@@ -88,6 +87,7 @@ namespace SagaStateMachineWorkerService.Machines
                     )
                 )
                 .Then(context => Console.WriteLine($"{nameof(PaymentCompletedEvent)} after: {context.Saga}"))
+                .Finalize()
             );
         }
     }
