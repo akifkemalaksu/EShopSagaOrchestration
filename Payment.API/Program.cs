@@ -27,8 +27,6 @@ builder.Services.AddMassTransit(x =>
             hostConfigure.Password(rabbitMqSettings.Password);
         });
 
-        configure.ConfigureEndpoints(context);
-
         configure.ReceiveEndpoint(RabbitMqQueues.PaymentStockReservedRequestQueue, configureEndpoint =>
         {
             configureEndpoint.ConfigureConsumer<StockReservedRequestPaymentConsumer>(context);

@@ -30,8 +30,6 @@ builder.Services.AddMassTransit(x =>
 
         });
 
-        configure.ConfigureEndpoints(context);
-
         configure.ReceiveEndpoint(RabbitMqQueues.OrderRequestCompletedEventQueue, configureEndpoint =>
         {
             configureEndpoint.ConfigureConsumer<OrderRequestCompletedEventConsumer>(context);
