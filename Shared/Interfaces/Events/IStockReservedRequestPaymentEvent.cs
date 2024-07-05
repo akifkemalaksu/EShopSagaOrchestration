@@ -3,7 +3,7 @@ using Shared.Messages;
 
 namespace Shared.Interfaces.Events
 {
-    public interface IStockReservedRequestPayment : CorrelatedBy<Guid>
+    public interface IStockReservedRequestPaymentEvent : CorrelatedBy<Guid>
     {
         PaymentMessage Payment { get; set; }
 

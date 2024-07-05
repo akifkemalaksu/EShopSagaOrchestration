@@ -4,20 +4,20 @@ using Shared.Interfaces.Commands;
 using Shared.Interfaces.Events;
 using Shared.Interfaces.Services;
 
-namespace Payment.API.Commands
+namespace Payment.API.Commands.StockReservedRequestPaymentEvent
 {
-    public class StockReservedRequestPaymentCommand : ICommandHandler<IStockReservedRequestPayment>
+    public class StockReservedRequestPaymentEventHandler : ICommandHandler<IStockReservedRequestPaymentEvent>
     {
-        private readonly ILogger<StockReservedRequestPaymentCommand> _logger;
+        private readonly ILogger<StockReservedRequestPaymentEventHandler> _logger;
         private readonly IBusService _busService;
 
-        public StockReservedRequestPaymentCommand(ILogger<StockReservedRequestPaymentCommand> logger, IBusService busService)
+        public StockReservedRequestPaymentEventHandler(ILogger<StockReservedRequestPaymentEventHandler> logger, IBusService busService)
         {
             _logger = logger;
             _busService = busService;
         }
 
-        public Task Handle(IStockReservedRequestPayment command, CancellationToken cancellationToken)
+        public Task Handle(IStockReservedRequestPaymentEvent command, CancellationToken cancellationToken)
         {
             var balance = 3000m;
 

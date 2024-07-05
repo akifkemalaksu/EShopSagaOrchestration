@@ -5,7 +5,7 @@ using Shared.Interfaces.Events;
 using Shared.Interfaces.Services;
 using Stock.API.Contexts;
 
-namespace Stock.API.Commands
+namespace Stock.API.Commands.OrderCreatedEvent
 {
     public class OrderCreatedEventHandler : ICommandHandler<IOrderCreatedEvent>
     {

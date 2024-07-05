@@ -17,7 +17,7 @@ builder.Services.AddSwaggerGen();
 var rabbitMqSettings = builder.Configuration.GetSection(nameof(RabbitMqSettings)).Get<RabbitMqSettings>();
 builder.Services.AddMassTransit(x =>
 {
-    x.AddConsumer<StockReservedRequestPaymentConsumer>();
+    x.AddConsumer<StockReservedRequestPaymentEventConsumer>();
 
     x.UsingRabbitMq((context, configure) =>
     {
@@ -29,7 +29,7 @@ builder.Services.AddMassTransit(x =>
 
         configure.ReceiveEndpoint(RabbitMqQueues.PaymentStockReservedRequestQueue, configureEndpoint =>
         {
-            configureEndpoint.ConfigureConsumer<StockReservedRequestPaymentConsumer>(context);
+            configureEndpoint.ConfigureConsumer<StockReservedRequestPaymentEventConsumer>(context);
         });
     });
 });

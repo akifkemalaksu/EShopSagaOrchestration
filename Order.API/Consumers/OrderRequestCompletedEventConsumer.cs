@@ -13,9 +13,9 @@ namespace Order.API.Consumers
             _commandDispatcher = commandDispatcher;
         }
 
-        public async Task Consume(ConsumeContext<IOrderRequestCompletedEvent> context)
+        public Task Consume(ConsumeContext<IOrderRequestCompletedEvent> context)
         {
-            await _commandDispatcher.Dispatch(context.Message);
+            return _commandDispatcher.Dispatch(context.Message);
         }
     }
 }

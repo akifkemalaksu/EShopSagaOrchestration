@@ -1,7 +1,6 @@
 ﻿using Mapster;
 using Order.API.Constants;
 using Order.API.Contexts;
-using Shared;
 using Shared.Constants;
 using Shared.Events;
 using Shared.Interfaces.Commands;

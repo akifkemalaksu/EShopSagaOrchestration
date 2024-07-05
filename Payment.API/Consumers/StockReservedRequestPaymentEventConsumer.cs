@@ -2,18 +2,18 @@
 using Shared.Interfaces.Commands;
 using Shared.Interfaces.Events;
 
-namespace Stock.API.Consumers
+namespace Payment.API.Consumers
 {
-    public class OrderCreatedEventConsumer : IConsumer<IOrderCreatedEvent>
+    public class StockReservedRequestPaymentEventConsumer : IConsumer<IStockReservedRequestPaymentEvent>
     {
         private readonly ICommandDispatcher _commandDispatcher;
 
-        public OrderCreatedEventConsumer(ICommandDispatcher commandDispatcher)
+        public StockReservedRequestPaymentEventConsumer(ICommandDispatcher commandDispatcher)
         {
             _commandDispatcher = commandDispatcher;
         }
 
-        public Task Consume(ConsumeContext<IOrderCreatedEvent> context)
+        public Task Consume(ConsumeContext<IStockReservedRequestPaymentEvent> context)
         {
             return _commandDispatcher.Dispatch(context.Message);
         }

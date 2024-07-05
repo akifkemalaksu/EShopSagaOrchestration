@@ -1,4 +1,5 @@
 ﻿using Shared.Interfaces.Events;
+using Shared.Messages;
 
 namespace Shared.Events
 {

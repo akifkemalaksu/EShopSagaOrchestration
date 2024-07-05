@@ -3,14 +3,14 @@ using Order.API.Contexts;
 using Shared.Interfaces.Commands;
 using Shared.Interfaces.Events;
 
-namespace Order.API.Commands
+namespace Order.API.Commands.OrderRequestCompletedEvent
 {
-    public class OrderRequestCompletedEventCommand : ICommandHandler<IOrderRequestCompletedEvent>
+    public class OrderRequestCompletedEventHandler : ICommandHandler<IOrderRequestCompletedEvent>
     {
         private readonly AppDbContext _dbContext;
-        private readonly ILogger<OrderRequestCompletedEventCommand> _logger;
+        private readonly ILogger<OrderRequestCompletedEventHandler> _logger;
 
-        public OrderRequestCompletedEventCommand(AppDbContext appDbContext, ILogger<OrderRequestCompletedEventCommand> logger)
+        public OrderRequestCompletedEventHandler(AppDbContext appDbContext, ILogger<OrderRequestCompletedEventHandler> logger)
         {
             _dbContext = appDbContext;
             _logger = logger;

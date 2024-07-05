@@ -3,9 +3,9 @@ using Shared.Messages;
 
 namespace Shared.Events
 {
-    public class StockReservedRequestPayment : IStockReservedRequestPayment
+    public class StockReservedRequestPaymentEvent : IStockReservedRequestPaymentEvent
     {
-        public StockReservedRequestPayment(Guid correlationId)
+        public StockReservedRequestPaymentEvent(Guid correlationId)
         {
             CorrelationId = correlationId;
         }
