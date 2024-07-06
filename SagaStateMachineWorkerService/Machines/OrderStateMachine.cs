@@ -144,6 +144,8 @@ namespace SagaStateMachineWorkerService.Machines
                 .Then(context => Console.WriteLine($"{nameof(PaymentFailedEvent)} after: {context.Saga}"))
 
             );
+
+            SetCompletedWhenFinalized();
         }
     }
 }
