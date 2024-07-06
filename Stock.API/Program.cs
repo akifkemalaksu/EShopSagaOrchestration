@@ -21,6 +21,8 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<OrderCreatedEventConsumer>();
 
+    x.AddConsumer<PaymentFailedStockRollbackEventConsumer>();
+
     x.UsingRabbitMq((context, configure) =>
     {
         configure.Host(rabbitMqSettings.Host, hostConfigure =>
@@ -33,6 +35,11 @@ builder.Services.AddMassTransit(x =>
         configure.ReceiveEndpoint(RabbitMqQueues.StockOrderCreatedEventQueue, configureEndpoint =>
         {
             configureEndpoint.ConfigureConsumer<OrderCreatedEventConsumer>(context);
+        });
+
+        configure.ReceiveEndpoint(RabbitMqQueues.StockRollBackMessageQueue, configureEndpoint =>
+        {
+            configureEndpoint.ConfigureConsumer<PaymentFailedStockRollbackEventConsumer>(context);
         });
     });
 });

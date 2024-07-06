@@ -18,6 +18,8 @@ namespace SagaStateMachineWorkerService.Machines
 
         public Event<IPaymentCompletedEvent> PaymentCompletedEvent { get; set; }
 
+        public Event<IPaymentFailedEvent> PaymentFailedEvent { get; set; }
+
         public State OrderCreated { get; private set; }
 
         public State StockReserved { get; private set; }
@@ -25,6 +27,8 @@ namespace SagaStateMachineWorkerService.Machines
         public State StockNotReserved { get; private set; }
 
         public State PaymentCompleted { get; private set; }
+
+        public State PaymentFailed { get; private set; }
 
         public OrderStateMachine()
         {
@@ -70,7 +74,6 @@ namespace SagaStateMachineWorkerService.Machines
             During(OrderCreated,
 
                 When(StockReservedEvent)
-                .TransitionTo(StockReserved)
                 .SendAsync(
                     new Uri($"queue:{RabbitMqQueues.PaymentStockReservedRequestQueue}"),
                     async context =>
@@ -83,10 +86,10 @@ namespace SagaStateMachineWorkerService.Machines
                         }
                     )
                 )
+                .TransitionTo(StockReserved)
                 .Then(context => Console.WriteLine($"{nameof(StockReservedEvent)} after: {context.Saga}")),
 
                 When(StockNotReservedEvent)
-                .TransitionTo(StockNotReserved)
                 .SendAsync(
                     new Uri($"queue:{RabbitMqQueues.OrderRequestFailedEventQueue}"),
                     async context =>
@@ -96,9 +99,10 @@ namespace SagaStateMachineWorkerService.Machines
                             OrderId = context.Saga.OrderId,
                             Reason = context.Message.Reason,
                         }
-                        )
                     )
-                .Then(context => Console.WriteLine($"{nameof(StockReservedEvent)} after: {context.Saga}"))
+                    )
+                .TransitionTo(StockNotReserved)
+                .Then(context => Console.WriteLine($"{nameof(StockNotReservedEvent)} after: {context.Saga}"))
             );
 
             During(StockReserved,
@@ -115,7 +119,29 @@ namespace SagaStateMachineWorkerService.Machines
                     )
                 )
                 .Then(context => Console.WriteLine($"{nameof(PaymentCompletedEvent)} after: {context.Saga}"))
-                .Finalize()
+                .Finalize(),
+
+                When(PaymentFailedEvent)
+                .PublishAsync(
+                    async context =>
+                    await context.Init<IOrderRequestFailedEvent>(
+                        new OrderRequestFailedEvent
+                        {
+                            OrderId = context.Saga.OrderId,
+                            Reason = context.Message.Reason,
+                        }
+                    )
+                )
+                .SendAsync(
+                    new Uri($"queue:{RabbitMqQueues.StockRollBackMessageQueue}"),
+                    async context =>
+                    await context.Init<IPaymentFailedStockRollbackEvent>(new PaymentFailedStockRollbackEvent
+                    {
+                        OrderItems = context.Message.OrderItems,
+                        OrderId = context.Saga.OrderId
+                    }))
+                .TransitionTo(PaymentFailed)
+                .Then(context => Console.WriteLine($"{nameof(PaymentFailedEvent)} after: {context.Saga}"))
 
             );
         }
